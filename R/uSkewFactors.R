@@ -3,11 +3,12 @@ library(tmvtnorm)
 library(mvtnorm)
 library(MCMCpack)
 library(MASS)
+library(stats)
 
 
-sumwt <- function(x=NULL, z=NULL ) { sum(x*z) }
+sum.wt <- function(x=NULL, z=NULL ) { sum(x*z) }
 
-Zig <- function(x=NULL, gpar=NULL, v=NULL) {
+Z.ig <- function(x=NULL, gpar=NULL, v=NULL) {
 	n = nrow(x)
 	g = length(gpar$pi);
 	if (g > 1) {
@@ -21,13 +22,13 @@ Zig <- function(x=NULL, gpar=NULL, v=NULL) {
 	return(w)
 	}
 
-zrand <- function(x=NULL, G=NULL)	{
+z.rand <- function(x=NULL, G=NULL)	{
 	priors=rep(1,G)
 	z=rdirichlet(nrow(x), priors)
 	return(z)
 }
 
-gparkmeans <- function(x=NULL, G=NULL){
+gpar.kmeans <- function(x=NULL, G=NULL){
 	
 	class.vec <- kmeans(x,G)$cluster
 	z <- matrix(0, nrow=nrow(x), ncol=G)
@@ -35,7 +36,7 @@ gparkmeans <- function(x=NULL, G=NULL){
 	return(z)
 }
 
-gparrand <- function(x=NULL, G=NULL){
+gpar.rand <- function(x=NULL, G=NULL){
 	
 	priors=rep(1,G)
 	z=rdirichlet(nrow(x), priors)
@@ -109,18 +110,18 @@ uskewFA <- function(x=NULL, G=NULL, q=NULL, init=1, max.it=100) {
 	x=as.matrix(x)
 	val = list()
 	val$z = matrix(0,nrow=nrow(x),ncol=G)
-	if(init==1) val$z=gparkmeans(x=x, G=G)
-	if(init==2) val$z=gparrand(x=x, G=G) 
+	if(init==1) val$z=gpar.kmeans(x=x, G=G)
+	if(init==2) val$z=gpar.rand(x=x, G=G) 
 	
 	val$gpar = rgpar(x=x, g=G, p=ncol(x), dlam=TRUE, q=q, z=val$z)
 	n=nrow(x)
 	it=1
 	not.converged=1 
-	while(not.converged && it<=100) {		
-		val$z = Zig(x=x, gpar=val$gpar, v=1)
+	while(not.converged && it<=max.it) {		
+		val$z = Z.ig(x=x, gpar=val$gpar, v=1)
 		for (g in 1:G) {
- 		estepg = eStep(x=x, par=val$gpar[[g]], wt=val$z[,g])
- 		val$gpar[[g]] = mStep(x= x, gpar=val$gpar[[g]], estep=estepg, z=val$z[,g], it=it)
+ 		estepg = e.step(x=x, par=val$gpar[[g]], wt=val$z[,g])
+ 		val$gpar[[g]] = m.step(x= x, gpar=val$gpar[[g]], estep=estepg, z=val$z[,g], it=it)
  		}
  		val$gpar$pi = apply(val$z,2,mean)
  		#print(val$gpar$pi)
@@ -131,14 +132,14 @@ uskewFA <- function(x=NULL, G=NULL, q=NULL, init=1, max.it=100) {
 		#plot(val$loglik)
 		it=it+1
 	}
-	val$z   = Zig(x=x, gpar=val$gpar, v=1)
+	val$z   = Z.ig(x=x, gpar=val$gpar, v=1)
 	val$map = apply(val$z,1, function(z){ (1:length(z))[z==max(z)] }) 
 	output=list()
 	output$map=val$map
 	output$bic=bic(l=val$loglik,par=val$gpar,x=x,q=q)
 	output$zhat=val$z
 	output$likelihood=val$loglik
-	return(val)
+	return(output)
 	}
 	
 loglik <- function(x=NULL, gpar=NULL) {
@@ -159,7 +160,7 @@ glogskewtden <- function(x=NULL, gpar=NULL) {
 	return(zlog)	
 }
 
-updateNu <- function(nuv=NULL) {
+update.nu <- function(nuv=NULL) {
 	nu0 = c(2,200)
 	v0 = log(nu0/2) + 1 - digamma(nu0/2) - nuv
 	sv0 = sign(v0)
@@ -177,7 +178,7 @@ updateNu <- function(nuv=NULL) {
 	return(val)
 }
 
-eStep <- function(x=NULL, par=NULL,wt=NULL) {
+e.step <- function(x=NULL, par=NULL,wt=NULL) {
 	n = nrow(x); p =ncol(x); 
 	if (is.null(wt)) wt= rep(1,n)
 	
@@ -208,9 +209,9 @@ eStep <- function(x=NULL, par=NULL,wt=NULL) {
 		logtau[i] = tau[i] - log( (par$nu+u[i])/2) - cc[1] + digamma( (par$nu+p)/2 )
 		
 		
-		temp=try(truncatedTmom(mu=qq[i,], sigma=round(par$delta/cc[2]), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
-		if(is.list(temp)) temp=temp else temp = try(truncatedTmom(mu=qq[i,], sigma=round(par$delta/cc[2],3), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
-		if(is.list(temp)) temp=temp else temp = try(truncatedTmom(mu=qq[i,], sigma=round(par$delta/cc[2],2), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
+		temp=try(truncated.tmom(mu=qq[i,], sigma=round(par$delta/cc[2]), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
+		if(is.list(temp)) temp=temp else temp = try(truncated.tmom(mu=qq[i,], sigma=round(par$delta/cc[2],3), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
+		if(is.list(temp)) temp=temp else temp = try(truncated.tmom(mu=qq[i,], sigma=round(par$delta/cc[2],2), a=rep(0,p), nu=par$nu + p + 2 ),silent=TRUE)
 		
 		eta[i,]  = temp$tmean
 		psi      = psi + wt[i]*tau[i]*( temp$tvar + outer(temp$tmean,temp$tmean) )
@@ -221,7 +222,7 @@ eStep <- function(x=NULL, par=NULL,wt=NULL) {
 }
 
 
-mStep <- function(x= NULL, gpar=NULL, estep=NULL, z=NULL, it=NULL) {
+m.step <- function(x= NULL, gpar=NULL, estep=NULL, z=NULL, it=NULL) {
 	n = nrow(x); p=ncol(x); q=ncol(gpar$Lambda); #
 
 	wtt = z*estep$tau
@@ -243,7 +244,7 @@ mStep <- function(x= NULL, gpar=NULL, estep=NULL, z=NULL, it=NULL) {
 	sig = rr + t(par1$lam) %*% (estep$psi.wt) %*% par1$lam  - ( (temp) %*% (par1$lam)  + t(par1$lam) %*% t(temp) )
 	par1$sig = sig/sum(wtt)
 
-	par1$nu = updateNu(nuv=weighted.mean( estep$tau - estep$logtau , w=z) )
+	par1$nu = update.nu(nuv=weighted.mean( estep$tau - estep$logtau , w=z) )
 	par1$Beta = t(par1$Lambda)%*%par1$invSig
 	par1$omega  = par1$sig + t(par1$lam) %*% par1$lam;
 	par1$invOmg = solve( par1$omega ); 
@@ -262,17 +263,17 @@ mStep <- function(x= NULL, gpar=NULL, estep=NULL, z=NULL, it=NULL) {
 	return(par1)	
 }
 
-truncatedTmom <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
-	if (length(mu) == 1 ) val = truncatedTmom1(mu= as.numeric(mu), sigma= as.numeric(sigma), lower=0, upper=Inf, nu=nu)
-	else if (length(mu) == 2) val = truncatedTmom2(mu= mu, sigma= sigma, a=a, nu=nu)
-	else val = truncatedTmomk(mu= mu, sigma= sigma, a=a, nu=nu)
+truncated.tmom <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
+	if (length(mu) == 1 ) val = truncated.tmom1(mu= as.numeric(mu), sigma= as.numeric(sigma), lower=0, upper=Inf, nu=nu)
+	else if (length(mu) == 2) val = truncated.tmom2(mu= mu, sigma= sigma, a=a, nu=nu)
+	else val = truncated.tmomk(mu= mu, sigma= sigma, a=a, nu=nu)
 	return(val)
 }
 
-truncatedTmomk <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
+truncated.tmomk <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
 	mu = -1*mu
 	p = length(mu)
-	if (p < 3 ) stop("truncatedTmomk is for k greater 2")
+	if (p < 3 ) stop("truncated.tmomk is for k greater 2")
 		
 	xi = numeric(p)
 	H  = matrix(0,p,p)
@@ -326,7 +327,7 @@ truncatedTmomk <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
 }
 
 
-truncatedTmom1 <- function(mu=NULL, sigma=NULL, lower=NULL, upper=NULL, nu=NULL) {
+truncated.tmom1 <- function(mu=NULL, sigma=NULL, lower=NULL, upper=NULL, nu=NULL) {
 	s = sqrt(sigma)
 	
 	ab = (c(lower,upper) - mu)/s 
@@ -348,7 +349,7 @@ truncatedTmom1 <- function(mu=NULL, sigma=NULL, lower=NULL, upper=NULL, nu=NULL)
 }
 
 
-truncatedTmom2 <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
+truncated.tmom2 <- function(mu=NULL, sigma=NULL, a=NULL, nu=NULL) {
 	mu = -1*mu
 	
 	if (length(mu) != 2 ) stop("mu does not have length 2")

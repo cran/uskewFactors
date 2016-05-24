@@ -1,7 +1,7 @@
-18f3db98d25cb8a5b4074de52dfe3f76 *DESCRIPTION
-9893d252497f8ddcda09b5bbc2827fde *NAMESPACE
-f4229df8010a5d074b4c88001ae97af8 *R/uSkewFactors.R
+3e4811fa6078f042f26decec59e8bc39 *DESCRIPTION
+a8e1388ec30cb236dba5b2433f611f02 *NAMESPACE
+551ab0dabf3063a0dc490c1dd8eb9b63 *R/uSkewFactors.R
 fcd34c6825f1958b72d309b8291366c6 *data/banknote.rda
 d1846a430aa9bd589521cb0bad915ee4 *man/banknote.Rd
-220e94218766e6254bdaf2c235ba5359 *man/uskewFA.Rd
-a7e3f99f14c695bd3762358d90ca0cb9 *man/uskewFactors-package.Rd
+e727bd39140497b26a66e8a7aa4f5b79 *man/uskewFA.Rd
+76c9ad3ebcccacb15b2c02616d5e7ece *man/uskewFactors-package.Rd

@@ -26,9 +26,7 @@ The number of latent factors.
 	The maximum number of iterations of the EM algorithm.
 }
 }
-%\details{
-%%  ~~ If necessary, more details than the description above ~~
-%}
+
 \value{
 \item{map}{A vector of the maximum a posteriori group memberships.}
 \item{bic}{The value of the Bayesian Information Criterion.}
@@ -40,7 +38,7 @@ Murray, P.M., Browne, R.P., and McNicholas, P.D. (2014), "Mixtures of 'Unrestric
 \author{
 Paula M. Murray, Ryan P. Browne, and Paul D. McNicholas
 
-Maintainer: Paula M. Murray <murrapm3@math.mcmaster.ca>}
+Maintainer: Paula M. Murray <paula.murray@math.mcmaster.ca>}
 \note{
 This package contains measurements on 200 Swiss banknotes: 100 genuine and 100 counterfeit. The variables are length of bill, width of left edge, width of right edge , bottom margin width and top margin width. All measurements are in millimetres. The data source is noted below. 
 }
@@ -51,11 +49,12 @@ This package contains measurements on 200 Swiss banknotes: 100 genuine and 100 c
 Flury, B. and Riedwyl, H. (1988). Multivariate Statistics: A practical approach. London: Chapman and Hall.
 }
 \examples{
-\dontrun{
-	data("banknote")
-	x=banknote[,c(5,6)]
-	results=uskewFA(x,G=2,q=1)
-	results
-}
+data("banknote")
+x=banknote[,c(5,6)]
+# We let max.it=3 for a speedy illustration.
+# More 	iterations are needed to ensure
+# convergence.
+results=uskewFA(x,G=2,q=1,max.it=3)
+results
 }
 

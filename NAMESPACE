@@ -1,5 +1,6 @@
 import(tmvtnorm)
 import(mvtnorm)
 import(MCMCpack)
+import(stats)
 import(MASS)
 export(uskewFA)
